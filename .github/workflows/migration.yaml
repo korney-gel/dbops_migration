@@ -48,10 +48,18 @@ jobs:
     - name: Wait for Postgres
       run: until pg_isready -h localhost -p 5432; do sleep 1; done
 
-    # Выполняем миграции с помощью Flyway, используя URL подключения и учётные данные для базы данных
+    - name: Install PostgreSQL client (psql)
+      run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+
+      # Выполняем миграции с помощью Flyway, используя URL подключения и учётные данные для базы данных
     - name: Run Flyway migrations
       env:
         FLYWAY_URL: "jdbc:postgresql://localhost:5432/testdb"
         FLYWAY_USER: testuser
         FLYWAY_PASSWORD: testpassword
       run: flyway migrate -locations=filesystem:sql/migrations
+
+    - name: Check Flyway Migrations in DB
+      run: |
+          PGPASSWORD=yourpassword psql -h localhost -U postgres -d testdb -c "SELECT * FROM flyway_schema_history;"
